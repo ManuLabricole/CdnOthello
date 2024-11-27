@@ -22,3 +22,15 @@ class View(ABC):
         """Display the introduction of the game.
         """
         pass
+
+    @abstractmethod
+    def get_player_info(self, player_number):
+        """Query the user for player type, name, and representation.
+
+        Args:
+            player_number (int): The player number (e.g., 1 or 2).
+
+        Returns:
+            dict: A dictionary containing player information.
+        """
+        pass

@@ -1,3 +1,6 @@
+from typing import Dict
+
+from reversi.models import Board, Player
 from reversi.views.view import View
 
 
@@ -21,12 +24,37 @@ class GameEngine:
         Args:
             view (View): The view to display the game.
         """
-        self.board = None
-        self.player1 = None
-        self.player2 = None
-        self.current_player = None
+        self.view: View = view
+        self.board: Board = None
+        self.player_1: Player = None
+        self.player_2: Player = None
+        self.current_player: int = None  # 0 or 1
+    
+    def _create_players(self):
+        """Take input from the user to create two players.
+
+        Expects the following dictionary structure:
+        {
+            'name': 'Player 1',
+            'representation': '⚫',
+            'type': 'H'
+        }
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+        player_1_specs: Dict = self.view.get_player_info(1)
+        self.player_1 = Player.create_player(player_1_specs)
+        player_2_specs: Dict = self.view.get_player_info(2)
+        self.player_2 = Player.create_player(player_2_specs)
+
+        # Finally
+
+
 
     def start_game(self):
         """Start the game by initializing the board and players, then run the game loop."""
-        print("Starting the game...")
-        print("Game Over!")
+        self._create_players()
