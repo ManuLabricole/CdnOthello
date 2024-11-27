@@ -100,6 +100,52 @@ class Board:
         # Remove duplicates and return the list of valid moves
         return list(set(valid_moves))
 
+    def make_move(self, player, move):
+        """
+        Update the board by placing the player's piece at the given move and flipping opponent's pieces.
+
+        Args:
+            player (int): The player number (1 or 2).
+            move (Tuple[int, int]): The move coordinates (x, y).
+        """
+        x, y = move
+        opponent = 2 if player == 1 else 1
+
+        # Place the player's piece on the board
+        self._grid[y][x] = player
+
+        # Check all directions to flip opponent's pieces
+        for dx, dy in DIRECTIONS:
+            nx, ny = x + dx, y + dy
+            pieces_to_flip = []
+
+            # Step 1: Check if adjacent square is on the board and has opponent's piece
+            if not (0 <= nx < self.x and 0 <= ny < self.y):
+                continue  # Skip if out of bounds
+            if self._grid[ny][nx] != opponent:
+                continue  # No opponent piece next to this square in this direction
+
+            # Step 2: Move along the direction to find player's own piece
+            while True:
+                pieces_to_flip.append((nx, ny))
+                nx += dx
+                ny += dy
+
+                if not (0 <= nx < self.x and 0 <= ny < self.y):
+                    # No enclosing piece found; discard pieces_to_flip
+                    break  # Out of bounds
+                if self._grid[ny][nx] == opponent:
+                    # Continue searching and add opponent's piece to flip
+                    pieces_to_flip.append((nx, ny))
+                elif self._grid[ny][nx] == player:
+                    # Found player's own piece; flip all intervening opponent's pieces
+                    for flip_x, flip_y in pieces_to_flip:
+                        self._grid[flip_y][flip_x] = player
+                    break
+                else:
+                    # Empty square or other; not valid in this direction
+                    break
+
     @property
     def state(self) -> List[List[int]]:
         """This property returns the current state of the board in a structure that will be parsable and displayable by the view"""

@@ -79,10 +79,10 @@ class GameEngine:
 
         if self._debug:
             self.player_1 = Player.create_player(
-                {"name": "Player 1", "representation": "⚫", "type": "Human"}
+                {"name": "Player 1", "representation": "⚫", "type": "Human", "num": 1}
             )
             self.player_2 = Player.create_player(
-                {"name": "Player 2", "representation": "⚪", "type": "Human"}
+                {"name": "Player 2", "representation": "⚪", "type": "Human", "num": 2}
             )
         else:
             player_1_specs: Dict = self.view.get_player_info(1)
@@ -110,14 +110,24 @@ class GameEngine:
                 self.player_1, self.player_2, self.current_player, score
             )
             # 3. Compute available moves
-            available_moves: List[Tuple[int, int]] = self.board.get_available_moves(self.current_player)
+            available_moves: List[Tuple[int, int]] = self.board.get_available_moves(
+                self.current_player
+            )
+            if not available_moves:
+                self.view.display_no_moves(self.current_player)
+
+                self.current_player = 2 if self._current_player == 1 else 1
+                available_moves = self.board.get_available_moves(self.current_player)
+                if not available_moves:
+                    self.view.display_game_over()
+                    break
             # 4. Display the board
             self.view.display_board(
                 self.board.state, self.player_1, self.player_2, available_moves
             )
             # 5. Get the player's move
             move: Tuple[int, int] = self.view.get_player_move_choice(
-                self.current_player, available_moves
+                self.current_player, available_moves, Board.state
             )
             # 6. Make the move i.e update the board accordingly
             self.board.make_move(self.current_player, move)

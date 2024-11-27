@@ -8,6 +8,7 @@ from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 from rich.text import Text
 
+from reversi.models import Player
 from reversi.views.view import View
 
 # Get player representation (emoji)
@@ -94,7 +95,13 @@ class TerminalView(View):
         else:
             self.console.print("[bold yellow]It's a tie![/bold yellow]")
 
-    def display_header(self, player_1, player_2, current_player, score):
+    def display_header(
+        self,
+        player_1: Player,
+        player_2: Player,
+        current_player: int,
+        score: Dict[str, int],
+    ):
         """
         Display the header with player specs, current turn, and live score.
 
@@ -128,7 +135,11 @@ class TerminalView(View):
         self.console.print(header)
 
     def display_board(
-        self, board_state: List[List[int]], player_1, player_2, current_player
+        self,
+        board_state: List[List[int]],
+        player_1: Player,
+        player_2: Player,
+        available_moves: List[Tuple[int, int]],
     ):
         """
         Render the board state in the terminal with proper alignment and style.
@@ -139,9 +150,6 @@ class TerminalView(View):
             player_2 (Player): Player 2 object.
         """
         self.console.print("\n[bold magenta]🌟 Reversi Board 🌟[/bold magenta]\n")
-
-        board_state = board.state
-        board_available_moves = board.get_available_moves(player=current_player)
         # Dynamically generate column labels with correct spacing
         num_columns = len(board_state[0])
         header = "      " + "  ".join(
@@ -165,7 +173,7 @@ class TerminalView(View):
                 elif cell == 2:
                     row_display += f" {player_2.representation} │"
                 else:
-                    if (x, y) in board_available_moves:
+                    if (x, y) in available_moves:
                         # Highlight available moves with a blue circle
                         row_display += " ♦️  │"
                     else:
@@ -183,6 +191,13 @@ class TerminalView(View):
         self.console.print(f"[bright_blue]{bottom_border}[/bright_blue]")
 
         self.console.print("\n")
+
+    def display_no_moves(self, player):
+        """Display a message when a player has no available moves."""
+        self.console.print(
+            f"[bold red]{player.name}[/bold red] has no available moves. Skipping turn..."
+        )
+        sleep(1)
 
     # # -------------
     # Input Methods
@@ -299,3 +314,71 @@ class TerminalView(View):
                 )
 
         return x, y
+
+    def get_player_move_choice(self, current_player, available_moves, board_state):
+        """
+        Prompt the current player to choose a move from the available moves.
+
+        Args:
+            current_player (Player): The current player object.
+            available_moves (list of tuples): List of available move coordinates (x, y).
+            board_state (list of lists): The current state of the board.
+
+        Returns:
+            Tuple[int, int]: The selected move as (x, y) coordinates.
+        """
+        num_columns = len(board_state[0])
+        num_rows = len(board_state)
+        while True:
+            self.console.print(
+                f"\n[bold cyan]{current_player.name} ({current_player.representation}), it's your turn.[/bold cyan]"
+            )
+            move_input = (
+                self.console.input(
+                    "[bold magenta]Enter your move (e.g., D3): [/bold magenta]"
+                )
+                .strip()
+                .upper()
+            )
+
+            # Validate input format
+            if len(move_input) < 2:
+                self.console.print(
+                    "[red]Invalid input. Please enter a column letter followed by a row number.[/red]"
+                )
+                continue
+
+            # Convert column letter to x index
+            col = move_input[0]
+            if not col.isalpha():
+                self.console.print(
+                    "[red]Invalid column letter. Please enter a valid column letter.[/red]"
+                )
+                continue
+            x = ord(col) - ord("A")
+
+            # Convert row number to y index
+            row_str = move_input[1:]
+            if not row_str.isdigit():
+                self.console.print(
+                    "[red]Invalid row number. Please enter a valid row number.[/red]"
+                )
+                continue
+            y = int(row_str) - 1  # Adjust for zero-based index
+
+            # Check if x and y are within board bounds
+            if x < 0 or x >= num_columns or y < 0 or y >= num_rows:
+                self.console.print(
+                    "[red]Invalid move. The position is outside the board.[/red]"
+                )
+                continue
+
+            # Check if move is in available_moves
+            if (x, y) not in available_moves:
+                self.console.print(
+                    "[red]Invalid move. This move is not available.[/red]"
+                )
+                continue
+
+            # Valid move
+            return (x, y)
