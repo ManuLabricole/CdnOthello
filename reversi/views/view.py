@@ -6,8 +6,6 @@ maintainable and scalable.
 
 from abc import ABC, abstractmethod
 
-from reversi.models.board import Board
-
 
 class View(ABC):
     """View class is an abstract class that defines the interface for the views.
@@ -19,7 +17,15 @@ class View(ABC):
 
     @abstractmethod
     def display_introduction(self):
-        """Display the introduction of the game.
+        """Display the introduction of the game."""
+        pass
+
+    @abstractmethod
+    def display_game_over(self, winner):
+        """Display the game over message.
+
+        Args:
+            winner (Player): The winner of the game.
         """
         pass
 
@@ -32,5 +38,26 @@ class View(ABC):
 
         Returns:
             dict: A dictionary containing player information.
+        """
+        pass
+
+    @abstractmethod
+    def display_board(self, board_state, player_1, player_2):
+        """Display the game board.
+
+        Args:
+            board (list): The game board.
+            player_1 (Player): Player 1.
+            player_2 (Player): Player 2.
+        """
+        pass
+    
+    @abstractmethod
+    def display_header(self, player_1, player_2, current_player, score):
+        """Display the header of the game.
+
+        Args:
+            player_1 (Player): Player 1.
+            player_2 (Player): Player 2.
         """
         pass
