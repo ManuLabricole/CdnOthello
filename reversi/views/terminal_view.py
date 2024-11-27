@@ -1,9 +1,8 @@
 from time import sleep
-from typing import Dict, Tuple
+from typing import Dict, List, Tuple
 
 from rich.align import Align
 from rich.console import Console
-from rich.live import Live
 from rich.panel import Panel
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 from rich.table import Table
@@ -115,20 +114,22 @@ class TerminalView(View):
         header = Table(show_header=False, box=None, padding=(0, 2))
         header.add_row(
             f"[green]Name:[/green][bold yellow][/bold yellow] {player_1.name} {player_1.representation} {player_1_indicator}",
-            f"[green]Name:[/green][bold cyan][/bold cyan] {player_2.name} {player_2.representation} {player_2_indicator}"
+            f"[green]Name:[/green][bold cyan][/bold cyan] {player_2.name} {player_2.representation} {player_2_indicator}",
         )
         header.add_row(
             f"[green]Type:[/green] {player_1.__class__.__name__}",
-            f"[green]Type:[/green] {player_2.__class__.__name__}"
+            f"[green]Type:[/green] {player_2.__class__.__name__}",
         )
         header.add_row(
             f"[green]Score:[/green] {score['player_1']}",
-            f"[green]Score:[/green] {score['player_2']}"
+            f"[green]Score:[/green] {score['player_2']}",
         )
 
         self.console.print(header)
 
-    def display_board(self, board_state, player_1, player_2):
+    def display_board(
+        self, board_state: List[List[int]], player_1, player_2, current_player
+    ):
         """
         Render the board state in the terminal with proper alignment and style.
 
@@ -139,37 +140,50 @@ class TerminalView(View):
         """
         self.console.print("\n[bold magenta]🌟 Reversi Board 🌟[/bold magenta]\n")
 
+        board_state = board.state
+        board_available_moves = board.get_available_moves(player=current_player)
         # Dynamically generate column labels with correct spacing
         num_columns = len(board_state[0])
-        header = "    " + "  ".join(f"[bold green]{chr(ord('A') + i)}[/bold green]" for i in range(num_columns))
+        header = "      " + "  ".join(
+            f"[bold green]{chr(ord('A') + i)}[/bold green]  "
+            for i in range(num_columns)
+        )
         self.console.print(header)
 
         # Top border
-        top_border = "   ╔" + "═══╤" * (num_columns - 1) + "═══╗"
+        top_border = "   ╔" + "════╤" * (num_columns - 1) + "════╗"
         self.console.print(f"[bright_blue]{top_border}[/bright_blue]")
 
         # Rows with board state and row numbers
         for y, row in enumerate(board_state):
-            row_display = f"[bold yellow]{y + 1:<2}[/bold yellow] │"  # Row label (1, 2, ...)
-            for cell in row:
+            row_display = (
+                f"[bold yellow]{y + 1:<2}[/bold yellow] │"  # Row label (1, 2, ...)
+            )
+            for x, cell in enumerate(row):
                 if cell == 1:
                     row_display += f" {player_1.representation} │"
                 elif cell == 2:
                     row_display += f" {player_2.representation} │"
                 else:
-                    row_display += " 🟩 │"  # Green square for empty cells
+                    if (x, y) in board_available_moves:
+                        # Highlight available moves with a blue circle
+                        row_display += " ♦️  │"
+                    else:
+                        row_display += " 🟩 │"  # Green square for empty cells
             self.console.print(f"[bright_blue]{row_display}[/bright_blue]")
+            # self.console.print(f"[bright_blue]{row_display}[/bright_blue]")
 
             # Add a separator between rows (except the last row)
             if y < len(board_state) - 1:
-                separator = "   ╟" + "───┼" * (num_columns - 1) + "───╢"
+                separator = "   ╟" + "────┼" * (num_columns - 1) + "────╢"
                 self.console.print(f"[bright_blue]{separator}[/bright_blue]")
 
         # Bottom border
-        bottom_border = "   ╚" + "═══╧" * (num_columns - 1) + "═══╝"
+        bottom_border = "   ╚" + "════╧" * (num_columns - 1) + "════╝"
         self.console.print(f"[bright_blue]{bottom_border}[/bright_blue]")
 
         self.console.print("\n")
+
     # # -------------
     # Input Methods
     # -------------

@@ -1,5 +1,5 @@
 from time import sleep
-from typing import Dict
+from typing import Dict, List, Tuple
 
 from reversi.models import Board, Player
 from reversi.views.view import View
@@ -35,7 +35,7 @@ class GameEngine:
     @property
     def current_player(self) -> Player:
         """Getter for the current player."""
-        return self.player_1 if self._current_player == 1 else self.player_2
+        return self._current_player
 
     @current_player.setter
     def current_player(self, player_number: int):
@@ -55,9 +55,8 @@ class GameEngine:
         try:
             available_moves = self.board.get_available_moves(self.current_player)
             if len(available_moves) == 0:
-                available_moves = self.board.get_available_moves(self.current_player)
-                if len(available_moves) == 0:
-                    return True
+                return True
+            return False
         except NotImplementedError:
             return False
 
@@ -110,13 +109,18 @@ class GameEngine:
             self.view.display_header(
                 self.player_1, self.player_2, self.current_player, score
             )
-            # 3. Update the board by computing the available moves
+            # 3. Compute available moves
+            available_moves: List[Tuple[int, int]] = self.board.get_available_moves(self.current_player)
             # 4. Display the board
-            self.view.display_board(self.board.state, self.player_1, self.player_2)
-            input("Press Enter to continue...")
-            # 3. Get the available moves
-            # 4. Get the player's move
-            # 5. Make the move
+            self.view.display_board(
+                self.board.state, self.player_1, self.player_2, available_moves
+            )
+            # 5. Get the player's move
+            move: Tuple[int, int] = self.view.get_player_move_choice(
+                self.current_player, available_moves
+            )
+            # 6. Make the move i.e update the board accordingly
+            self.board.make_move(self.current_player, move)
             # 6. Switch the current player
             self.current_player = 2 if self._current_player == 1 else 1
 
